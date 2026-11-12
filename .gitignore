@@ -1,0 +1,7 @@
+#Environnement 
+.env
+
+.vscode/
+#Airflow
+logs/
+
