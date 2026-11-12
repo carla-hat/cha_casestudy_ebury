@@ -2,15 +2,47 @@ services:
 
   postgres:
     image: postgres:16
-    
+    container_name: postgreSQL_cont
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=analytics
     ports:
       - "5432:5432"
-  eburydecasestudypack:
-    image: eburydecasestudypack
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 5s
+      timeout: 15s
+      retries: 8
+      start_period: 5s
+
+  airflow:
+    build: ./airflow
+    container_name: airflow_cont
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://admin:admin@postgres:5432/analytics
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./src:/opt/airflow/src
+    ports:
+      - "8080:8080"
+    command: standalone
+
+  dbt:
+    build: ./dbt
+    container_name: dbt_cont
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dbt:/dbt
+    command: tail -f /dev/null
+volumes:
+  pgdata:
