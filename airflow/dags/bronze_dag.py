@@ -18,6 +18,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from sqlalchemy import create_engine, text
 from airflow.exceptions import AirflowException
 
+from common.datasets import BRONZE_CUSTOMER_TRANSACTIONS
 
 log = logging.getLogger(__name__)
 
@@ -99,7 +100,7 @@ def ppl_ingestion():
                 ))
                 logging.info(f"--------------Table {table} is ready")
 
-    @task            
+    @task(outlets=[BRONZE_CUSTOMER_TRANSACTIONS])           
     def load_table(csv_files: list[str], lotid : str) -> None:
 
         engine= get_engine()
