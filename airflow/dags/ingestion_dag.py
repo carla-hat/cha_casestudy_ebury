@@ -53,7 +53,7 @@ def get_engine():
     description="Raw ingestion of customer transactions into table postgreSQL",
     default_args=default_args,
     start_date=datetime(2026, 11, 1),
-    schedule=None,  # manual if not cron or for ex "@daily" if every day
+    schedule=None,  # manual if not cron or for ex "@daily" if every day or "@once"
     catchup=False, #from the past if we want change true
     max_active_runs=1,
     tags=["bronze", "ingestion", "postgres", "transactions", "customers"],
