@@ -15,7 +15,7 @@ from datetime import datetime, timedelta, timezone
 import pandas as pd
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, text
 from airflow.exceptions import AirflowException
 
 
@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 CSV_FILE_PATH = "/opt/airflow/data"
 POSTGRES_CONN_ID = "postgres_analytics"
 BRONZE_SCHEMA = "bronze"
-META_COLUMNS = ["_ting", "_lsrcfil", "_lotid"]
+# META_COLUMNS = ["_ting", "_lsrcfil", "_lotid"]
 
 default_args = {
     "owner": "chatamoto",
@@ -43,7 +43,7 @@ def table_name_from(file_name: str) -> str:
 
 def get_engine():
     ##connection
-    pg_hook = PostgresHook(postgres_conn_id='postgres_analytics')
+    pg_hook = PostgresHook(postgres_conn_id=POSTGRES_CONN_ID)
     db_url = pg_hook.get_uri()
     gest_engine = create_engine(db_url)
     return gest_engine
@@ -79,6 +79,8 @@ def ppl_ingestion():
 
         engine = get_engine()
         with engine.begin() as connexion:
+            connexion.execute(text(f"CREATE SCHEMA IF NOT EXISTS {BRONZE_SCHEMA}"))
+
             for file in csv_files:
 
                 table = table_name_from(file)
@@ -98,46 +100,49 @@ def ppl_ingestion():
                 logging.info(f"--------------Table {table} is ready")
 
     @task            
-    def load_table(csv_files: list[str], lotid: str) -> int:
+    def load_table(csv_files: list[str], lotid : str) -> None:
 
         engine= get_engine()
+        failed: dict[str, str]={}
         for file in csv_files:
                         
                 table = table_name_from(file)
                 logging.info(f"--------------Charging {file} into table  {table}")
+                try:
+                    df = pd.read_csv(CSV_FILE_PATH+'/'+file, dtype=str, keep_default_na=False)
 
-                df = pd.read_csv(CSV_FILE_PATH+'/'+file, dtype=str, keep_default_na=False)
+                    # adding metadata
+                    df["_ting"] = datetime.now(timezone.utc)
+                    df["_lsrcfil"] = file
+                    df["_lotid"] = lotid
 
-                # adding metadata
-                df["_ting"] = datetime.now(timezone.utc)
-                df["_lsrcfil"] = file
-                df["_lotid"] = lotid
+                    with engine.begin() as connexion:
+                        connexion.execute(text(f"TRUNCATE TABLE {BRONZE_SCHEMA}.{table}"))
+                        df.to_sql(
+                                name=table,
+                                con=connexion,
+                                schema=BRONZE_SCHEMA,
+                                if_exists="append",
+                                index=False,
+                                method="multi",
+                                chunksize=1000,
+                                )
+                        logging.info(f"Table {table} has been loaded with data") 
+                        row_table = len(df)
+                        logging.info(f"{row_table} rows have been charged")
+                except Exception as e:
+                    logging.exception(f"Failed loading {table} ")
+                    failed[file] = str(e)
+        if failed:
+            raise AirflowException(f"Load failed for {len(failed)} file(s): {failed}")
 
-                with engine.begin() as connexion:
-                   connexion.execute(text(f"TRUNCATE TABLE {BRONZE_SCHEMA}.{table}"))
-                   df.to_sql(
-                        name=table,
-                        con=connexion,
-                        schema=BRONZE_SCHEMA,
-                        if_exists="append",
-                        index=False,
-                        method="multi",
-                        chunksize=1000,
-                    )
-                logging.info(f"Table {table} has been loaded with data") 
-                row_table = len(df)
-                logging.info(f"{row_table} rows have been charged") 
-        return row_number
 
-    @task
-    def validate_load(row_number: int) -> None:
-        return None
 
 
 
     files = list_of_files()
     tables = create_table(files)
-    num_row = load_table(files, "{{ run_id }}")
-    validate_load(num_row)
+    charge = load_table(files, '{{ run_id }}')
+    tables >> charge
 
 dag_instance = ppl_ingestion()
