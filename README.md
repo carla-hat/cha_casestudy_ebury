@@ -16,6 +16,8 @@ docker compose up -d --build
 
 # 3. Open Airflow
 #    http://localhost:8080   (port set by AIRFLOW_PORT in .env)
+#    user / password: AIRFLOW_ADMIN_USER / AIRFLOW_ADMIN_PASSWORD
+#    from your .env 
 ```
 
 **Run the pipeline**

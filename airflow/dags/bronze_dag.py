@@ -30,8 +30,7 @@ BRONZE_SCHEMA = "bronze"
 default_args = {
     "owner": "chatamoto",
     "depends_on_past": False,
-    "email_on_failure": True,
-    "email":["hitacarla3c@gmail.com"],
+    "email_on_failure": False,
     "retries": 2,
     "retry_delay": timedelta(minutes=2),
 }
