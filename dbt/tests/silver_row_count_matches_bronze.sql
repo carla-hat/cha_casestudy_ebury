@@ -1,9 +1,9 @@
 -- Fails if silver has a different number of rows than bronze.
-with bronze_count(
+with bronze_count as (
     select count(*) as total_bronze
     from bronze.customer_transactions
 ),
-with silver_count(
+silver_count as (
     select count(*) as total_silver
     from silver.silver_customer_transactions
 )
