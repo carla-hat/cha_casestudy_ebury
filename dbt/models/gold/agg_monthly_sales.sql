@@ -4,5 +4,5 @@ select
     count(*) as num_transactions,
     sum(quantity) as units_sold,
     sum(total_amount) as total_revenue_month
-from {{ ref('fact_transactions')} }
+from {{ ref('fact_transactions') }}
 group by 1
