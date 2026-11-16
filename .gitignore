@@ -9,3 +9,6 @@ dbt/target/
 dbt/logs/
 dbt/dbt_packages/
 dbt/.user.yml
+
+*.pyc
+__pycache__/

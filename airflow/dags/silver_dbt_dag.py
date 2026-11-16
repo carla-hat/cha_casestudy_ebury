@@ -50,7 +50,7 @@ def silver_dbt():
         task_id="dbt_test_silver",
         # models/silver -> the tests declared in schema.yml
         # tests         -> the singular tests (plain SQL files in dbt/tests)
-        bash_command=f"{DBT} test --select path:models/silver path:tests {DBT_ARGS}",
+        bash_command=f"{DBT} test --select path:models/silver path:tests/silver {DBT_ARGS}",
         retries=0, 
         outlets=[SILVER_CUSTOMER_TRANSACTIONS],  # published only if the tests pass
     )

@@ -50,7 +50,7 @@ def gold_dbt():
     dbt_test_gold = BashOperator(
         task_id="dbt_test_gold",
         # models/gold -> the tests declared in schema.yml
-        bash_command=f"{DBT} test --select path:models/gold path:tests {DBT_ARGS}",
+        bash_command=f"{DBT} test --select path:models/gold path:tests/gold {DBT_ARGS}",
         retries=0, 
         outlets=[GOLD_CUSTOMER_TRANSACTIONS],  # published only if the tests pass
     )
