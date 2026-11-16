@@ -29,6 +29,11 @@ cleaned as (
             when trim(tax) ~ '^-?[0-9]+(\.[0-9]+)?$' then cast(trim(tax)as numeric(12,2))
             when lower(trim(tax)) = 'fifteen' then 15
         end as numeric(12,2)) as tax,
+        transaction_id as transaction_id_raw,
+        transaction_date as transaction_date_raw,
+        product_id as product_id_raw,
+        price as price_raw,
+        tax as tax_raw,
 
         array_remove(array[
             case when transaction_id ~ '[^0-9]' then 'transaction_id_prefix_removed' end,
@@ -36,7 +41,7 @@ cleaned as (
             case when transaction_date ~ '^[0-9]{2}-[0-9]{2}-[0-9]{4}$' then 'date_format_ddmmyyyy' end,
             case when price ~ '[A-Za-z]' then 'price_from_words' end,
             case when tax   ~ '[A-Za-z]' then 'tax_from_words' end
-        ], null) as pending_values,
+        ], null) as fixed_values,
         _ting, _lsrcfil, _lotid
 
     from source
@@ -49,7 +54,7 @@ select *,
         case when price is null then 'invalid_price' end,
         case when tax is null then 'invalid_tax' end,
         case when transaction_date is null then 'invalid_date' end
-    ], null) as remove_values,
+    ], null) as pending_values,
     (customer_id is not null and quantity is not null and price is not null
     and tax is not null and transaction_date is not null) as is_valid
 from cleaned
