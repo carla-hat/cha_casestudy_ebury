@@ -1,0 +1,62 @@
+version: 2
+
+models:
+  - name: dim_products
+    description: >
+      Product dimension. One row per product_id, built from valid transactions only.
+    columns:
+      - name: product_id
+        description: Unique key of the product.
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: Name of the product.
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+
+  - name: fact_transactions
+    description: >
+      Transaction fact. One row per transaction_id, valid rows only.
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: customer_id
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+      - name: product_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('dim_products')
+              field: product_id
+      - name: transaction_date
+        data_tests:
+          - not_null
+      - name: quantity
+        data_tests:
+          - not_null
+      - name: unit_price
+        data_tests:
+          - not_null
+      - name: tax
+        data_tests:
+          - not_null:
+              config:
+                severity: warn       
+      - name: total_amount
+        description: price*quantity + tax.
+
+  - name: agg_monthly_sales
+    description: Monthly totals built from fact_transactions.
+    columns:
+      - name: month
+        data_tests:
+          - unique
+          - not_null
