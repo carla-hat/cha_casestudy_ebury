@@ -1,6 +1,0 @@
-services:
-  eburydecasestudypack:
-    image: eburydecasestudypack
-    build:
-      context: .
-      dockerfile: ./Dockerfile

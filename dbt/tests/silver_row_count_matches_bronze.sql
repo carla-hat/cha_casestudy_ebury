@@ -5,7 +5,7 @@ with bronze_count as (
 ),
 silver_count as (
     select count(*) as total_silver
-    from silver.silver_customer_transactions
+    from analytics_silver.silver_customer_transactions
 )
 select
     bronze_count.total_bronze as bronze_rows,

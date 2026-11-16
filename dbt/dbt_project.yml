@@ -14,6 +14,6 @@ models:
     silver:
       +schema: silver
       +materialized: view
-    marts:
+    gold:
+      +schema: gold
       +materialized: table
-      +schema: marts
