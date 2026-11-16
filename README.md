@@ -1,4 +1,4 @@
-# ETL PIPELINE CASE STUDY EBURY
+# ELT PIPELINE CASE STUDY EBURY
 Pipeline using Airflow, dbt, postgreSQL and the possibility of use in Docker
 
 **Stack:** PostgreSQL 16 · Apache Airflow 2.10 · dbt-core 1.9 (dbt-postgres) · Docker Compose
