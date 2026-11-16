@@ -7,15 +7,16 @@ Pipeline using Airflow, dbt, postgreSQL and the possibility of use in Docker
 **Requirements:** Docker and Docker Compose.
 
 ```bash
-# 1. Create your local environment file
+# 1. Create your local environment file and write correct information
 cp .env.example .env
+#    add user and pwd for postgres and airflow
 #    (Linux only) set AIRFLOW_UID to the output of: id -u
 
 # 2. Build and start everything
 docker compose up -d --build
 
 # 3. Open Airflow
-#    http://localhost:8080   (port set by AIRFLOW_PORT in .env)
+#    http://localhost:8080   (or port set by AIRFLOW_PORT in .env)
 #    user / password: AIRFLOW_ADMIN_USER / AIRFLOW_ADMIN_PASSWORD
 #    from your .env 
 ```
@@ -23,8 +24,15 @@ docker compose up -d --build
 **Run the pipeline**
 the pipeline runs automatically on startup
 
+
 ## Architecture
 ![Pipeline architecture](docs/images/architecture_v2_1.png)
+Bronze > Raw copy of the CSV as TEXT. Metadata columns are added. 
+Silver > In DBT cleaning of the data, keeping raw columns with the original ones. Flag in order to know if it's a valid column or not
+Gold > Only valid rows. One dim and one fact table.
+
+Orchestrated in Airflow using Airflow Datasets. Each layer is independent in running.
+2 retries for bronze, 1 silver, 1 gold.
 
 ## Repository structure
 
@@ -56,3 +64,13 @@ the pipeline runs automatically on startup
 - **`fact_transactions`**: one row per `transaction_id` (`customer_id`, `product_id`, `transaction_date`, `quantity`, `unit_price`, `tax`, `total_amount`).
   `total_amount = quantity * unit_price + tax`
 - **`agg_monthly_sales`**: monthly transactions, units sold and revenue (`total_revenue_month`).
+
+## Data quality
+
+First look at the raw CSV showed different problems:
+- Prefix in transaction_id
+- Different date formats
+- Numbers written with words
+- Decimals in integer fields
+- Missing values in different columns
+
