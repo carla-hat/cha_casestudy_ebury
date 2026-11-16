@@ -1,0 +1,20 @@
+name: customer_project
+version: "1.0.0"
+config-version: 2
+profile: customer_project
+
+model-paths: ["models"]
+macro-paths: ["macros"] #personalized functions
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  customer_project:
+    silver:
+      +schema: silver
+      +materialized: view
+    marts:
+      +materialized: table
+      +schema: marts

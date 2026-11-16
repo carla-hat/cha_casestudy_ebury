@@ -4,4 +4,8 @@
 .vscode/
 #Airflow
 logs/
+#dbt
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
 

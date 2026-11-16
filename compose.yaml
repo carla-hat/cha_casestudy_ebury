@@ -17,7 +17,22 @@ services:
       timeout: 15s
       retries: 8
       start_period: 5s
-
+  
+  airflow_db:
+    image: postgres:16
+    container_name: airflow_db_cont
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=airflow
+    volumes:
+      - airflow_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 8
+  
   airflow:
     build: ./airflow
     container_name: airflow_cont
@@ -25,12 +40,19 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      airflow_db:
+        condition: service_healthy
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      # Airflow's own metadata lives in separate database
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@airflow_db:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW_CONN_POSTGRES_ANALYTICS: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "true"
+      # read by dbt (dbt/profiles.yml)
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./dbt:/opt/airflow/dbt
@@ -41,3 +63,4 @@ services:
 
 volumes:
   pgdata:
+  airflow_pgdata:
