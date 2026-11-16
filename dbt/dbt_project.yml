@@ -4,7 +4,6 @@ config-version: 2
 profile: customer_project
 
 model-paths: ["models"]
-macro-paths: ["macros"] #personalized functions
 test-paths: ["tests"]
 
 target-path: "target"

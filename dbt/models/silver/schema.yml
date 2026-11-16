@@ -1,0 +1,61 @@
+version: 2
+
+models:
+  - name: silver_customer_transactions
+    description: >
+      Cleaned and typed customer transactions (silver layer).
+      Columns ending in _raw keep the original bronze value for audit only.
+
+    columns:
+      - name: transaction_id
+        description: Unique identifier for each transaction (prefix such as 'T' removed).
+        data_tests:
+          - unique
+          - not_null
+
+      - name: transaction_date
+        description: Transaction date (accepts YYYY-MM-DD and DD-MM-YYYY from bronze).
+        data_tests:
+          - not_null
+
+      - name: product_id
+        description: Product identifier (prefix such as 'P' removed).
+        data_tests:
+          - not_null
+
+      - name: product_name
+        description: Product name, trimmed.
+        data_tests:
+          - not_null
+
+      - name: price
+        description: Unit price. Number words such as 'Two Hundred' are converted.
+        data_tests:
+          - not_null
+
+      - name: tax
+        description: Tax amount. Number words such as 'Fifteen' are converted.
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+
+      # Already gaps in the source data.
+      - name: customer_id
+        description: Customer identifier. NULL when missing in the source.
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: quantity
+        description: Units sold. NULL when missing in the source (see pending_values).
+        data_tests:
+          - not_null:
+              config:
+                severity: warn
+
+      - name: is_valid
+        description: true when no issue is pending (all required fields are present).
+        data_tests:
+          - not_null
