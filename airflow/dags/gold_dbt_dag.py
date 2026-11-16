@@ -6,7 +6,7 @@ Runs the dbt gold models and then their
 data quality tests. It is triggered by the silver Dataset: it starts by itself
 when the silver transformations finish successfully.
 
-The silver Dataset is published only by the test task, gold dags start only when the silver tests have passed.
+The gold Dataset is published only by the test task, gold dags start only when the silver tests have passed.
 """
 from __future__ import annotations
 
